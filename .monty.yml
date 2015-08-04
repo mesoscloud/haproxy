@@ -1,0 +1,13 @@
+- build: 1.5.14/ubuntu/14.04
+  image:
+    - mesoscloud/haproxy:1.5.14-ubuntu-14.04
+    - mesoscloud/haproxy:1.5.14-ubuntu
+    - mesoscloud/haproxy:1.5.14
+    - mesoscloud/haproxy:1.5-ubuntu-14.04
+    - mesoscloud/haproxy:1.5-ubuntu
+    - mesoscloud/haproxy:1.5
+    - mesoscloud/haproxy:latest
+
+
+- tests:
+    - cmd: python -m doctest ./init.py
