@@ -12,9 +12,32 @@ import time
 import kazoo.client
 
 
-def pid():
-    with open('/tmp/haproxy.pid') as f:
-        return int(f.read().rstrip())
+def haproxy_pid():
+    """Return pid of haproxy or None if haproxy is not running"""
+    if os.path.exists('/tmp/haproxy.pid'):
+        with open('/tmp/haproxy.pid') as f:
+            pid = int(f.read().rstrip())
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            return
+        return pid
+
+
+def haproxy_start(restart=False):
+    """Start or restart haproxy, do not restart haproxy if restart is False"""
+    pid = haproxy_pid()
+    if pid is None:
+        cmd = ["haproxy", "-f", "/tmp/haproxy.cfg", "-p", "/tmp/haproxy.pid"]
+    else:
+        if not restart:
+            return
+        cmd = ["haproxy", "-f", "/tmp/haproxy.cfg", "-p", "/tmp/haproxy.pid", "-sf", str(pid)]
+    print >>sys.stderr, "cmd:", ' '.join(cmd)
+    p = subprocess.Popen(cmd)
+    r = p.wait()
+    if r != 0:
+        print >>sys.stderr, "exit:", r
 
 
 def main():
@@ -24,8 +47,11 @@ def main():
     zk = None
     while True:
 
+        if os.path.exists('/tmp/haproxy.cfg'):
+            haproxy_start()
+
         if zk is None:
-            zk = kazoo.client.KazooClient(hosts=os.getenv('ZK', '127.0.0.1:2181'), read_only=True)
+            zk = kazoo.client.KazooClient(hosts=os.getenv('ZK', 'localhost:2181'), read_only=True)
         try:
             zk.start()
             data, stat = zk.get("/haproxy/config")
@@ -37,27 +63,12 @@ def main():
             continue
 
         if mtime < stat.mtime:
-
-            print "mtime=%s (%s) version=%s" % (stat.mtime, datetime.datetime.fromtimestamp(stat.mtime / 1000.0).ctime(), stat.version)
-
+            print >>sys.stderr, "version: %s, mtime: %s (%s)" % (stat.version, stat.mtime, datetime.datetime.fromtimestamp(stat.mtime / 1000.0).ctime())
             with open('/tmp/haproxy.cfg', 'w') as f:
                 f.write(data)
-
-            if os.path.exists('/tmp/haproxy.pid'):
-                cmd = ["haproxy", "-f", "/tmp/haproxy.cfg", "-p", "/tmp/haproxy.pid", "-sf", str(pid())]
-                print >>sys.stderr, "cmd:", ' '.join(cmd)
-                p = subprocess.Popen(cmd)
-            else:
-                cmd = ["haproxy", "-f", "/tmp/haproxy.cfg", "-p", "/tmp/haproxy.pid"]
-                print >>sys.stderr, "cmd:", ' '.join(cmd)
-                p = subprocess.Popen(cmd)
-            r = p.wait()
-            if r != 0:
-                print >>sys.stderr, "exit:", r
-
-            print "pid:", pid()
-
+            haproxy_start(restart=True)
             mtime = stat.mtime
+
         time.sleep(10)
 
 
