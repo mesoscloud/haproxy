@@ -64,7 +64,7 @@ def main():
 
         if mtime < stat.mtime:
             print("version: %s, mtime: %s (%s)" % (stat.version, stat.mtime, datetime.datetime.fromtimestamp(stat.mtime / 1000.0).ctime()), file=sys.stderr)
-            with open('/tmp/haproxy.cfg', 'w') as f:
+            with open('/tmp/haproxy.cfg', 'wb') as f:
                 f.write(data)
             haproxy_start(restart=True)
             mtime = stat.mtime
