@@ -6,6 +6,18 @@
 
 The haproxy-marathon image is used to generate HAProxy config using Marathon as a data source (and storing the resulting config in ZooKeeper), see https://github.com/mesoscloud/haproxy-marathon
 
+## CentOS
+
+[![](https://badge.imagelayers.io/mesoscloud/haproxy:1.5.14-centos-7.svg)](https://imagelayers.io/?images=mesoscloud/haproxy:1.5.14-centos-7)
+
+e.g.
+
+```
+docker run -d \
+-e ZK=node-1:2181 \
+--name=haproxy --net=host --restart=always mesoscloud/haproxy:1.5.14-centos-7
+```
+
 ## Ubuntu
 
 [![](https://badge.imagelayers.io/mesoscloud/haproxy:1.5.14-ubuntu-14.04.svg)](https://imagelayers.io/?images=mesoscloud/haproxy:1.5.14-ubuntu-14.04)
@@ -13,7 +25,7 @@ The haproxy-marathon image is used to generate HAProxy config using Marathon as 
 e.g.
 
 ```
-docker run -d
--e ZK=node-1:2181
+docker run -d \
+-e ZK=node-1:2181 \
 --name=haproxy --net=host --restart=always mesoscloud/haproxy:1.5.14-ubuntu-14.04
 ```

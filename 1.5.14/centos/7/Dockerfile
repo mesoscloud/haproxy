@@ -1,6 +1,11 @@
-FROM ubuntu:14.04
+FROM centos:7
 
-RUN apt-get update && apt-get install -y curl gcc libpcre3-dev libssl-dev make python3 python3-pip
+RUN yum install -y epel-release && \
+yum install -y gcc make openssl-devel pcre-devel python34 && \
+ln -s python3.4 /usr/bin/python3 && \
+curl -fLO https://bootstrap.pypa.io/get-pip.py && \
+python3 get-pip.py && \
+rm get-pip.py
 
 RUN curl -fL http://www.haproxy.org/download/1.5/src/haproxy-1.5.14.tar.gz | tar xzf - -C /usr/src && \
 cd /usr/src/haproxy-1.5.14 && \
