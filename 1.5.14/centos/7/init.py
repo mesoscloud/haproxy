@@ -66,13 +66,18 @@ def main():
 
         if zk is None:
             zk = kazoo.client.KazooClient(hosts=os.getenv('ZK', 'localhost:2181'), read_only=True)
+            try:
+                zk.start()
+            except Exception as exc:
+                print(str(exc.__class__.__name__) + ':', exc, file=sys.stderr)
+                time.sleep(1)
+                zk = None
+                continue
         try:
-            zk.start()
             data, stat = zk.get("/haproxy/config")
         except Exception as exc:
             print(str(exc.__class__.__name__) + ':', exc, file=sys.stderr)
-            print("Sleeping for 30 seconds...", file=sys.stderr)
-            time.sleep(30)
+            time.sleep(1)
             zk = None
             continue
 
