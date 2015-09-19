@@ -25,6 +25,10 @@ import time
 
 import kazoo.client
 
+pem = os.getenv('HAPROXY_PEM')
+crt = os.path.join(os.path.dirname(pem), 'server.crt')
+key = os.path.join(os.path.dirname(pem), 'server.key')
+
 
 def haproxy_pid():
     """Return pid of haproxy or None if haproxy is not running"""
@@ -56,6 +60,34 @@ def haproxy_start(restart=False):
 
 def main():
     logging.basicConfig()
+
+    if not os.path.exists(pem):
+        p = subprocess.Popen(['hostname', '-f'], stdout=subprocess.PIPE)
+        hostname = p.stdout.read().decode('utf-8').rstrip()
+        assert p.wait() == 0
+
+        if not os.path.exists(crt) or not os.path.exists(key):
+            cmd = [
+                'openssl',
+                'req',
+                '-days', '365',
+                '-keyout', key,
+                '-new',
+                '-newkey', 'rsa:2048',
+                '-nodes',
+                '-out', crt,
+                '-subj', '/CN=' + hostname,
+                '-x509',
+            ]
+            print("cmd:", ' '.join(cmd), file=sys.stderr)
+            p = subprocess.Popen(cmd)
+            assert p.wait() == 0
+
+        with open(pem, 'w') as f1:
+            with open(crt) as f2:
+                f1.write(f2.read())
+            with open(key) as f2:
+                f1.write(f2.read())
 
     mtime = 0
     zk = None
