@@ -8,24 +8,24 @@ The haproxy-marathon image is used to generate HAProxy config using Marathon as 
 
 ## CentOS
 
-[![](https://badge.imagelayers.io/mesoscloud/haproxy:1.5.14-centos-7.svg)](https://imagelayers.io/?images=mesoscloud/haproxy:1.5.14-centos-7)
+[![](https://badge.imagelayers.io/mesoscloud/haproxy:1.5.17-centos-7.svg)](https://imagelayers.io/?images=mesoscloud/haproxy:1.5.17-centos-7)
 
 e.g.
 
 ```
 docker run -d \
 -e ZK=node-1:2181 \
---name=haproxy --net=host --restart=always mesoscloud/haproxy:1.5.14-centos-7
+--name=haproxy --net=host --restart=always mesoscloud/haproxy:1.5.17-centos-7
 ```
 
 ## Ubuntu
 
-[![](https://badge.imagelayers.io/mesoscloud/haproxy:1.5.14-ubuntu-14.04.svg)](https://imagelayers.io/?images=mesoscloud/haproxy:1.5.14-ubuntu-14.04)
+[![](https://badge.imagelayers.io/mesoscloud/haproxy:1.5.17-ubuntu-14.04.svg)](https://imagelayers.io/?images=mesoscloud/haproxy:1.5.17-ubuntu-14.04)
 
 e.g.
 
 ```
 docker run -d \
 -e ZK=node-1:2181 \
---name=haproxy --net=host --restart=always mesoscloud/haproxy:1.5.14-ubuntu-14.04
+--name=haproxy --net=host --restart=always mesoscloud/haproxy:1.5.17-ubuntu-14.04
 ```

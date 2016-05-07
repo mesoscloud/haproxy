@@ -1,9 +1,20 @@
+- build: 1.5.17/centos/7
+  image:
+    - mesoscloud/haproxy:1.5.17-centos-7
+    - mesoscloud/haproxy:1.5.17-centos
+    - mesoscloud/haproxy:1.5.17
+    - mesoscloud/haproxy:latest
+
+- build: 1.5.17/ubuntu/14.04
+  image:
+    - mesoscloud/haproxy:1.5.17-ubuntu-14.04
+    - mesoscloud/haproxy:1.5.17-ubuntu
+
 - build: 1.5.14/centos/7
   image:
     - mesoscloud/haproxy:1.5.14-centos-7
     - mesoscloud/haproxy:1.5.14-centos
     - mesoscloud/haproxy:1.5.14
-    - mesoscloud/haproxy:latest
 
 - build: 1.5.14/ubuntu/14.04
   image:
