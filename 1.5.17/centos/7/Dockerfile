@@ -1,4 +1,5 @@
 FROM centos:7
+MAINTAINER Peter Ericson <pdericson@gmail.com>
 
 RUN yum install -y epel-release && \
 yum install -y gcc make openssl-devel pcre-devel python34 && \
@@ -7,10 +8,8 @@ python3 get-pip.py && \
 rm get-pip.py
 
 RUN curl -fL http://www.haproxy.org/download/1.5/src/haproxy-1.5.17.tar.gz | tar xzf - -C /usr/src && \
-cd /usr/src/haproxy-1.5.17 && \
-make TARGET=linux2628 USE_PCRE=1 USE_OPENSSL=1 USE_ZLIB=1 && \
-make install && \
-cd .. && \
+make -C /usr/src/haproxy-1.5.17 TARGET=linux2628 USE_PCRE=1 USE_OPENSSL=1 USE_ZLIB=1 && \
+make -C /usr/src/haproxy-1.5.17 install && \
 rm -rf /usr/src/haproxy-1.5.17
 
 RUN pip3 install kazoo
