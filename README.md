@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/mesoscloud/haproxy.svg?branch=master)](https://travis-ci.org/mesoscloud/haproxy)
-[![Docker Stars](https://img.shields.io/docker/stars/mesoscloud/haproxy.svg)](https://hub.docker.com/r/mesoscloud/haproxy/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/mesoscloud/haproxy.svg)](https://hub.docker.com/r/mesoscloud/haproxy/)
+[![Build Status](https://travis-ci.org/mesoscloud/haproxy.svg?branch=master)](https://travis-ci.org/mesoscloud/haproxy) [![Docker Stars](https://img.shields.io/docker/stars/mesoscloud/haproxy.svg)](https://hub.docker.com/r/mesoscloud/haproxy/) [![Docker Pulls](https://img.shields.io/docker/pulls/mesoscloud/haproxy.svg)](https://hub.docker.com/r/mesoscloud/haproxy/)
 
 # haproxy
 
