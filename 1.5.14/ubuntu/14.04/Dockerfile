@@ -19,4 +19,6 @@ ENV HAPROXY_PEM /etc/haproxy/site.pem
 
 COPY init.py /
 
-CMD ["/usr/local/bin/dumb-init", "python3", "-u", "/init.py"]
+ENTRYPOINT ["/usr/local/bin/dumb-init"]
+
+CMD ["python3", "-u", "/init.py"]
