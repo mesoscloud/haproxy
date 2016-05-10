@@ -1,6 +1,9 @@
 FROM centos:7
 MAINTAINER Peter Ericson <pdericson@gmail.com>
 
+# https://github.com/Yelp/dumb-init
+RUN curl -fLsS -o /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.0.2/dumb-init_1.0.2_amd64 && chmod +x /usr/local/bin/dumb-init
+
 RUN yum install -y epel-release && \
 yum install -y gcc make openssl-devel pcre-devel python34 && \
 curl -fLO https://bootstrap.pypa.io/get-pip.py && \
@@ -20,4 +23,4 @@ ENV HAPROXY_PEM /etc/haproxy/site.pem
 
 COPY init.py /
 
-CMD ["python3", "-u", "/init.py"]
+CMD ["/usr/local/bin/dumb-init", "python3", "-u", "/init.py"]
