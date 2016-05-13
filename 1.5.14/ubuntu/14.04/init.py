@@ -107,6 +107,10 @@ def main():
                 continue
         try:
             data, stat = zk.get("/haproxy/config")
+        except kazoo.client.NoNodeError:
+            print("No config", file=sys.stderr)
+            time.sleep(10)
+            continue
         except Exception as exc:
             print(str(exc.__class__.__name__) + ':', exc, file=sys.stderr)
             time.sleep(1)
