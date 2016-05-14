@@ -19,7 +19,6 @@
 import datetime
 import logging
 import os
-import re
 import subprocess
 import sys
 import time
@@ -124,7 +123,7 @@ def main():
         if mtime < stat.mtime:
             print("version: %s, mtime: %s (%s)" % (stat.version, stat.mtime, datetime.datetime.fromtimestamp(stat.mtime / 1000.0).ctime()), file=sys.stderr)
 
-            data = re.sub(r'bind 127\.0\.0\.1:', 'bind {0}:'.format(host), data)
+            data = data.replace(b'bind 127.0.0.1:', b'bind ' + host.encode('utf-8') + b':', data)
 
             with open('/tmp/haproxy.cfg', 'wb') as f:
                 f.write(data)
