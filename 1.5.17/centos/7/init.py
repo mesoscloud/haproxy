@@ -123,7 +123,7 @@ def main():
         if mtime < stat.mtime:
             print("version: %s, mtime: %s (%s)" % (stat.version, stat.mtime, datetime.datetime.fromtimestamp(stat.mtime / 1000.0).ctime()), file=sys.stderr)
 
-            data = data.replace(b'bind 127.0.0.1:', b'bind ' + host.encode('utf-8') + b':', data)
+            data = data.replace(b'bind 127.0.0.1:', b'bind ' + host.encode('utf-8') + b':')
 
             with open('/tmp/haproxy.cfg', 'wb') as f:
                 f.write(data)
