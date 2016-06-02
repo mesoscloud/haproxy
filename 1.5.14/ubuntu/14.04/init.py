@@ -1,18 +1,4 @@
 #!/usr/bin/python -u
-#
-# Copyright (c) 2015 Peter Ericson <pdericson@gmail.com>
-#
-# Permission to use, copy, modify, and distribute this software for any
-# purpose with or without fee is hereby granted, provided that the above
-# copyright notice and this permission notice appear in all copies.
-#
-# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 """HAProxy"""
 
@@ -24,10 +10,6 @@ import sys
 import time
 
 import kazoo.client
-
-pem = os.getenv('HAPROXY_PEM')
-crt = os.path.join(os.path.dirname(pem), 'server.crt')
-key = os.path.join(os.path.dirname(pem), 'server.key')
 
 
 def haproxy_pid():
@@ -50,7 +32,8 @@ def haproxy_start(restart=False):
     else:
         if not restart:
             return
-        cmd = ["haproxy", "-f", "/tmp/haproxy.cfg", "-p", "/tmp/haproxy.pid", "-sf", str(pid)]
+        cmd = ["haproxy", "-f", "/tmp/haproxy.cfg", "-p", "/tmp/haproxy.pid",
+               "-sf", str(pid)]
     print("cmd:", ' '.join(cmd), file=sys.stderr)
     p = subprocess.Popen(cmd)
     r = p.wait()
@@ -64,34 +47,6 @@ def main():
 
     logging.basicConfig()
 
-    if not os.path.exists(pem):
-        p = subprocess.Popen(['hostname', '-f'], stdout=subprocess.PIPE)
-        hostname = p.stdout.read().decode('utf-8').rstrip()
-        assert p.wait() == 0
-
-        if not os.path.exists(crt) or not os.path.exists(key):
-            cmd = [
-                'openssl',
-                'req',
-                '-days', '365',
-                '-keyout', key,
-                '-new',
-                '-newkey', 'rsa:2048',
-                '-nodes',
-                '-out', crt,
-                '-subj', '/CN=' + hostname,
-                '-x509',
-            ]
-            print("cmd:", ' '.join(cmd), file=sys.stderr)
-            p = subprocess.Popen(cmd)
-            assert p.wait() == 0
-
-        with open(pem, 'w') as f1:
-            with open(crt) as f2:
-                f1.write(f2.read())
-            with open(key) as f2:
-                f1.write(f2.read())
-
     mtime = 0
     zk = None
     while True:
@@ -100,7 +55,8 @@ def main():
             haproxy_start()
 
         if zk is None:
-            zk = kazoo.client.KazooClient(hosts=os.getenv('ZK', 'localhost:2181'), read_only=True)
+            zk = kazoo.client.KazooClient(
+                hosts=os.getenv('ZK', 'localhost:2181'), read_only=True)
             try:
                 zk.start()
             except Exception as exc:
@@ -121,9 +77,16 @@ def main():
             continue
 
         if mtime < stat.mtime:
-            print("version: %s, mtime: %s (%s)" % (stat.version, stat.mtime, datetime.datetime.fromtimestamp(stat.mtime / 1000.0).ctime()), file=sys.stderr)
 
-            data = data.replace(b'bind 127.0.0.1:', b'bind ' + host.encode('utf-8') + b':')
+            human = datetime.datetime.fromtimestamp(
+                stat.mtime / 1000.0).ctime()
+
+            print("version: %s, mtime: %s (%s)" %
+                  (stat.version, stat.mtime, human),
+                  file=sys.stderr)
+
+            data = data.replace(b'bind 127.0.0.1:',
+                                b'bind ' + host.encode('utf-8') + b':')
 
             with open('/tmp/haproxy.cfg', 'wb') as f:
                 f.write(data)

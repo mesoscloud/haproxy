@@ -17,10 +17,6 @@ rm -rf /usr/src/haproxy-1.5.17
 
 RUN pip3 install kazoo
 
-RUN yum install -y openssl && mkdir -p /etc/haproxy
-
-ENV HAPROXY_PEM /etc/haproxy/site.pem
-
 COPY init.py /
 
 ENTRYPOINT ["/usr/local/bin/dumb-init"]

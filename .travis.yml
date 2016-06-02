@@ -11,4 +11,4 @@ script:
         docker run --rm -i pdericson/hadolint < $path
     done
   - |
-    docker run --rm -v "$PWD":/mnt python:3-alpine sh -c 'pip install flake8 && flake8 --ignore=E501 /mnt'
+    docker run --rm -v "$PWD":/mnt python:3-alpine sh -c 'pip install flake8 && flake8 /mnt'
