@@ -13,10 +13,6 @@ rm -rf /usr/src/haproxy-1.5.14
 
 RUN pip3 install kazoo
 
-RUN mkdir -p /etc/haproxy
-
-ENV HAPROXY_PEM /etc/haproxy/site.pem
-
 COPY init.py /
 
 ENTRYPOINT ["/usr/local/bin/dumb-init"]
