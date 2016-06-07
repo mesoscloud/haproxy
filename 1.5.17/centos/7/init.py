@@ -45,7 +45,8 @@ def get_pid():
 def main():
     host = os.getenv('HOST', '127.0.0.1')
 
-    zk = kazoo.client.KazooClient(hosts='127.0.0.1:2181', read_only=True)
+    zk = kazoo.client.KazooClient(hosts=os.getenv('ZK', '127.0.0.1:2181'),
+                                  read_only=True)
     # zk.start will raise an exception if zookeeper is not available,
     # this is recoverable if the restart policy for the container is
     # set to always.
