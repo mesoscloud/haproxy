@@ -1,99 +1,88 @@
-#!/usr/bin/python -u
+#!/usr/bin/env python
 
-"""HAProxy"""
+"""haproxy
 
-import datetime
+The purpose of this script is to get haproxy config from zookeeper and
+gracefully restart haproxy on config change.
+
+"""
+
 import logging
 import os
 import subprocess
-import sys
+import threading
 import time
 
 import kazoo.client
+import kazoo.exceptions
+
+CFG = '/tmp/haproxy.cfg'
+PID = '/tmp/haproxy.pid'
+
+logging.basicConfig()
+
+lock = threading.Lock()
 
 
-def haproxy_pid():
-    """Return pid of haproxy or None if haproxy is not running"""
-    if os.path.exists('/tmp/haproxy.pid'):
-        with open('/tmp/haproxy.pid') as f:
-            pid = int(f.read().rstrip())
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            return
+def call(cmd):
+    """Log command invocation and exit status"""
+    print("call:", ' '.join(cmd))
+    print("exit:", subprocess.call(cmd))
+
+
+def get_pid():
+    """Get pid from PID, verify that the pid is not stale"""
+    try:
+        with open(PID) as f:
+            pid = int(f.read())
+        # This is a no-op signal
+        os.kill(pid, 0)
         return pid
-
-
-def haproxy_start(restart=False):
-    """Start or restart haproxy, do not restart haproxy if restart is False"""
-    pid = haproxy_pid()
-    if pid is None:
-        cmd = ["haproxy", "-f", "/tmp/haproxy.cfg", "-p", "/tmp/haproxy.pid"]
-    else:
-        if not restart:
-            return
-        cmd = ["haproxy", "-f", "/tmp/haproxy.cfg", "-p", "/tmp/haproxy.pid",
-               "-sf", str(pid)]
-    print("cmd:", ' '.join(cmd), file=sys.stderr)
-    p = subprocess.Popen(cmd)
-    r = p.wait()
-    if r != 0:
-        print("exit:", r, file=sys.stderr)
+    except (FileNotFoundError, ProcessLookupError):
+        pass
 
 
 def main():
-
     host = os.getenv('HOST', '127.0.0.1')
 
-    logging.basicConfig()
+    zk = kazoo.client.KazooClient(hosts=os.getenv('ZK', '127.0.0.1:2181'),
+                                  read_only=True)
+    # zk.start will raise an exception if zookeeper is not available,
+    # this is recoverable if the restart policy for the container is
+    # set to always.
+    zk.start()
 
-    mtime = 0
-    zk = None
-    while True:
+    @zk.DataWatch('/haproxy/config')
+    def watch(data, stat):
+        if data:
+            print("version: {0.version}".format(stat))
+        else:
+            print("version: there is no config")
+            return
 
-        if os.path.exists('/tmp/haproxy.cfg'):
-            haproxy_start()
+        # replace bind 127.0.0.1 with the ip address of the private interface
+        data = data.replace(b'bind 127.0.0.1:',
+                            b'bind ' + host.encode('utf-8') + b':')
 
-        if zk is None:
-            zk = kazoo.client.KazooClient(
-                hosts=os.getenv('ZK', 'localhost:2181'), read_only=True)
-            try:
-                zk.start()
-            except Exception as exc:
-                print(str(exc.__class__.__name__) + ':', exc, file=sys.stderr)
-                time.sleep(1)
-                zk = None
-                continue
-        try:
-            data, stat = zk.get("/haproxy/config")
-        except kazoo.client.NoNodeError:
-            print("No config", file=sys.stderr)
-            time.sleep(10)
-            continue
-        except Exception as exc:
-            print(str(exc.__class__.__name__) + ':', exc, file=sys.stderr)
-            time.sleep(1)
-            zk = None
-            continue
-
-        if mtime < stat.mtime:
-
-            human = datetime.datetime.fromtimestamp(
-                stat.mtime / 1000.0).ctime()
-
-            print("version: %s, mtime: %s (%s)" %
-                  (stat.version, stat.mtime, human),
-                  file=sys.stderr)
-
-            data = data.replace(b'bind 127.0.0.1:',
-                                b'bind ' + host.encode('utf-8') + b':')
-
-            with open('/tmp/haproxy.cfg', 'wb') as f:
+        with lock:
+            with open(CFG, 'wb') as f:
                 f.write(data)
-            haproxy_start(restart=True)
-            mtime = stat.mtime
 
-        time.sleep(10)
+            pid = get_pid()
+            if pid:
+                # restart haproxy
+                call(['haproxy', '-f', CFG, '-p', PID, '-sf', str(pid)])
+            else:
+                call(['haproxy', '-f', CFG, '-p', PID])
+
+    while True:
+        with lock:
+            if os.path.exists(CFG):
+                # check that haproxy is running, it should be.
+                pid = get_pid()
+                if not pid:
+                    call(['haproxy', '-f', CFG, '-p', PID])
+        time.sleep(60)
 
 
 if __name__ == '__main__':
